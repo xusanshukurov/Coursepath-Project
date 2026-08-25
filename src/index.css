@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+body{
+    font-family: inter;
+    color: white;
+    overflow-x: hidden;
+}
+
+
+.active{
+    color: #e6edf3;
+    font-weight: 600;
+    background-color: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.25);
+}
+.active svg{
+    display: block;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
