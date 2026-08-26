@@ -81,7 +81,7 @@ function Dashboard() {
     <div className='px-4 sm:px-6 lg:px-8' >
       {loading && <Loader />}
       <h1 className='text-xl sm:text-2xl font-extrabold'>Xush kelibsiz, {profile?.first_name} 👋</h1>
-      <p className='text-[14px] text-[#8b949e] mt-1'>Siz 7 kunlik seriyadasiz. O'rganishni hoziroq boshlang!</p>
+      <p className='text-[14px] text-[#8b949e] mt-1'>Natijalaringiz shu yerda ko'rinadi, O'rganishni hoziroq boshlang!</p>
       <ul className='my-5 grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6'>
         {rating.map(statistic => (
           <li key={statistic.label} className='p-3 sm:p-4 flex items-center gap-2 sm:gap-3 rounded-2xl bg-[#161b22] border-[1px] border-[rgba(255,255,255,0.07)]'>

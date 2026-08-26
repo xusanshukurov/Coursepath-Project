@@ -37,13 +37,13 @@ function MainPage() {
   ];
 
   const bottomNavItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Home' },
-    { to: '/kurslar', icon: BookOpen, label: 'Courses' },
-    { to: '/manbalar', icon: FolderOpen, label: 'Resources' },
-    { to: '/jarayon', icon: BarChart2, label: 'Progress' },
+    { to: '/', icon: LayoutDashboard, label: 'Asosiy' },
+    { to: '/kurslar', icon: BookOpen, label: 'Kurslar' },
+    { to: '/manbalar', icon: FolderOpen, label: 'Manbalar' },
+    { to: '/jarayon', icon: BarChart2, label: 'Jarayon' },
     ...(profile?.role === 'admin'
       ? [{ to: '/boshqaruv', icon: ShieldCheck, label: 'Admin' }]
-      : [{ to: '/profil', icon: User, label: 'Profile' }]
+      : [{ to: '/profil', icon: User, label: 'Profil' }]
     )
   ];
 
