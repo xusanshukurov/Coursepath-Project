@@ -460,23 +460,33 @@ export const CourseManagementProvider = ({ children }) => {
         const fileName = `${crypto.randomUUID()}.${extension}`;
         const filePath = `${lessonId}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-            .from(RESOURCE_BUCKET)
+        let targetBucket = RESOURCE_BUCKET;
+
+        let { error: uploadError } = await supabase.storage
+            .from(targetBucket)
             .upload(filePath, file, {
                 cacheControl: "3600",
                 upsert: false,
             });
 
+        if (uploadError && (uploadError.message?.includes("Bucket not found") || uploadError.error === "Bucket not found")) {
+            targetBucket = "course-resources";
+            const fallbackUpload = await supabase.storage
+                .from(targetBucket)
+                .upload(filePath, file, {
+                    cacheControl: "3600",
+                    upsert: false,
+                });
+            uploadError = fallbackUpload.error;
+        }
+
         if (uploadError) {
             console.log("Resource Upload Error:", uploadError);
-            if (uploadError.message?.includes("Bucket not found") || uploadError.error === "Bucket not found") {
-                throw new Error("Supabase Storage'da 'lesson-files' nomli bucket topilmadi. Supabase dashboard'da yaratishingiz kerak.");
-            }
-            throw new Error(uploadError.message || "Faylni yuklashda xatolik");
+            throw new Error(uploadError.message || "Supabase Storage'da 'lesson-files' yoki 'course-resources' bucket yaratilganini tekshiring.");
         }
 
         const { data: { publicUrl } } = supabase.storage
-            .from(RESOURCE_BUCKET)
+            .from(targetBucket)
             .getPublicUrl(filePath);
 
         return publicUrl;

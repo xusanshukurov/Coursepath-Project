@@ -141,6 +141,43 @@ function VideoPlayer() {
         await updateCourseProgress(course.id);
     };
 
+    const handleDownloadResource = async (e, res) => {
+        e.preventDefault();
+        if (!res?.file_url) return;
+
+        const isExternalWebLink = res.file_type === "notes" || (!res.file_url.includes("supabase.co/storage") && !res.file_url.match(/\.(pdf|zip|jpg|jpeg|png|webp|gif|txt|csv|json|js|jsx|ts|tsx|py|html|css|docx|xlsx|pptx|rar|7z)$/i));
+
+        if (isExternalWebLink) {
+            window.open(res.file_url, "_blank", "noopener,noreferrer");
+            return;
+        }
+
+        try {
+            const response = await fetch(res.file_url);
+            if (!response.ok) {
+                window.open(res.file_url, "_blank", "noopener,noreferrer");
+                return;
+            }
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = blobUrl;
+
+            const extension = res.file_url.split(".").pop().split("?")[0] || "file";
+            const fileName = res.title ? (res.title.endsWith(`.${extension}`) ? res.title : `${res.title}.${extension}`) : `download.${extension}`;
+
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(blobUrl);
+            }, 300);
+        } catch (err) {
+            window.open(res.file_url, "_blank", "noopener,noreferrer");
+        }
+    };
+
     const handleVideoError = (e) => {
         console.log("Video Load Error:", e);
         setVideoError(true);
@@ -154,14 +191,14 @@ function VideoPlayer() {
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <button
                         onClick={() => navigate('/kurslar')}
-                        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg active:scale-95 transition-all flex-shrink-0"
-                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#8b949e", cursor: "pointer", fontSize: "13px" }}
+                        className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg active:scale-95 transition-all flex-shrink-0"
+                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#8b949e", cursor: "pointer", fontSize: "12px" }}
                     >
-                        <ChevronLeft size={15} /> <span className="hidden sm:inline">Orqaga</span>
+                        <ChevronLeft size={15} /> Orqaga
                     </button>
-                    <div className="text-[13px] sm:text-[14px] font-semibold text-[#e6edf3] truncate min-w-0">{course?.title}</div>
+                    <div className="text-[13px] sm:text-[14px] font-semibold text-[#e6edf3] truncate">{course?.title}</div>
                 </div>
-                <div className="hidden sm:flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
                     <div style={{ fontSize: "12px", color: "#8b949e" }}>Progress: {completedCount}/{lessons.length}</div>
                     <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
                         <div className="h-full rounded-full" style={{ width: `${lessons.length ? (completedCount / lessons.length) * 100 : 0}%`, background: "linear-gradient(90deg, #3b82f6, #6366f1)" }} />
@@ -241,20 +278,17 @@ function VideoPlayer() {
                                         ? res.file_size 
                                         : formatFileSize(res.file_size);
                                     return (
-                                        <a
+                                        <div
                                             key={res.id}
+                                            onClick={(e) => handleDownloadResource(e, res)}
                                             className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 active:scale-95 bg-[rgba(255,255,255,0.03)] border-1 border-[rgba(255,255,255,0.05)] hover:bg-[rgba(59,130,246,0.08)] hover:border-[rgba(59,130,246,0.25)]"
                                             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
-                                            href={res.file_url}
-                                            download={res.file_url}
-                                            target='_blank'
-                                            rel="noreferrer"
                                         >
                                             <Icon size={14} style={{ color: "#3b82f6", flexShrink: 0 }} />
                                             <span style={{ color: "#c9d1d9", fontSize: "13px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{res.title}</span>
                                             <span style={{ color: "#8b949e", fontSize: "11px", fontFamily: "JetBrains Mono, monospace", flexShrink: 0 }}>{displaySize}</span>
-                                            <ExternalLink size={12} style={{ color: "#8b949e", flexShrink: 0 }} />
-                                        </a>
+                                            <Download size={12} style={{ color: "#58a6ff", flexShrink: 0 }} />
+                                        </div>
                                     );
                                 })}
                                 {(!lesson?.lesson_resources || lesson.lesson_resources.length === 0) && (

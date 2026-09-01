@@ -424,28 +424,31 @@ export function CourseContex({ children }) {
 
 
   const getResources = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("lesson_resources")
+        .select(`
+        *,
+        lessons(
+          id,
+          title
+        )
+      `)
+        .order("id", { ascending: false });
 
-    setLoading(true);
-
-    const { data, error } = await supabase
-      .from("lesson_resources")
-      .select(`
-      *,
-      lessons(
-        id,
-        title
-      )
-    `);
-
-    if (error) {
-      console.log(error);
-      setLoading(false);
-      return;
+      if (error) {
+        console.log(error);
+        const { data: fallbackData } = await supabase
+          .from("lesson_resources")
+          .select("*")
+          .order("id", { ascending: false });
+        setResources(fallbackData || []);
+      } else {
+        setResources(data || []);
+      }
+    } catch (err) {
+      console.log(err);
     }
-
-    setResources(data || []);
-    setLoading(false);
-
   };
 
 

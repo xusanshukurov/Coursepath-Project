@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { FileCode2, FileText, BookMarked, Archive, Link2, Download, Search } from "lucide-react";
 import { useCourse } from '../context/CourseContex';
-import Loader from '../components/Loader';
 
 const bookLinks = [
   { title: "You Don't Know JS (Yet)", author: "Kyle Simpson", category: "JavaScript", link: "https://github.com/getify/You-Dont-Know-JS.git"},
@@ -25,11 +24,48 @@ const formatFileSize = (bytes) => {
 
 function Resourses() {
   const [query, setQuery] = useState("");
-  const { getResources, resources, loading } = useCourse();
+  const { getResources, resources } = useCourse();
 
   useEffect(() => {
     getResources();
   }, []);
+
+  const handleDownload = async (e, res) => {
+    e.preventDefault();
+    if (!res?.file_url) return;
+
+    const isExternalWebLink = res.file_type === "notes" || (!res.file_url.includes("supabase.co/storage") && !res.file_url.match(/\.(pdf|zip|jpg|jpeg|png|webp|gif|txt|csv|json|js|jsx|ts|tsx|py|html|css|docx|xlsx|pptx|rar|7z)$/i));
+
+    if (isExternalWebLink) {
+      window.open(res.file_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    try {
+      const response = await fetch(res.file_url);
+      if (!response.ok) {
+        window.open(res.file_url, "_blank", "noopener,noreferrer");
+        return;
+      }
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+
+      const extension = res.file_url.split(".").pop().split("?")[0] || "file";
+      const fileName = res.title ? (res.title.endsWith(`.${extension}`) ? res.title : `${res.title}.${extension}`) : `download.${extension}`;
+
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 300);
+    } catch (err) {
+      window.open(res.file_url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   const filtered = (resources || []).filter(
     (r) =>
@@ -39,7 +75,6 @@ function Resourses() {
 
   return (
     <div className='px-4 sm:px-6 lg:px-8' style={{ fontFamily: "Inter, sans-serif" }}>
-      {loading && <Loader/>}
       <div className="mb-6">
         <h1 style={{ color: "#e6edf3", fontSize: "clamp(20px,5vw,26px)", fontWeight: 700, marginBottom: "4px" }}>Manbalar</h1>
         <p className='text-[#8b949e] text-[13px]'>Barcha fayllar, ko'dlar, jadval va kitob havolalari shu yerda</p>
@@ -57,11 +92,8 @@ function Resourses() {
             : formatFileSize(res.file_size);
 
           return (
-            <a 
-              download={res.file_type !== "notes"} 
-              href={res.file_url} 
-              target="_blank"
-              rel="noreferrer"
+            <div 
+              onClick={(e) => handleDownload(e, res)} 
               key={res.id} 
               className="flex items-center gap-3 p-3.5 rounded-2xl cursor-pointer transition-all duration-150 active:scale-95 bg-[#161b22] border-[1px] border-[rgba(255,255,255,0.07)] hover:border-[rgba(59,130,246,0.3)]"
             >
@@ -78,10 +110,13 @@ function Resourses() {
                   <span className='text-[#8b949e] text-[11px]'>{new Date(res.created_at || Date.now()).toLocaleDateString()}</span>
                 </div>
               </div>
-              <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl flex-shrink-0 active:scale-95 bg-[rgba(59,130,246,0.12)] border-[1px] border-[rgba(59,130,246,0.25)] text-[#58a6ff] text-[12px] cursor-pointer">
+              <button 
+                onClick={(e) => handleDownload(e, res)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl flex-shrink-0 active:scale-95 bg-[rgba(59,130,246,0.12)] border-[1px] border-[rgba(59,130,246,0.25)] text-[#58a6ff] text-[12px] cursor-pointer"
+              >
                 <Download size={12} /> <span className="hidden sm:inline">Yuklab olish</span>
               </button>
-            </a>
+            </div>
           );
         })}
         {filtered.length === 0 && (
